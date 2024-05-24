@@ -1,0 +1,119 @@
+stages:
+  - backend_tests #supertests
+  - deploy # scalingo
+  - jobcypress
+  - generate_badges
+
+backend_tests:
+  stage: backend_tests
+  image: node:latest  
+  script:
+    - cd backend/
+    - npm install
+    # update database
+    - npm run updatedb
+    # une documentation de l’API 
+    - npm run doc 
+    # Lancement du serveur en background &
+    - npm run startdev &
+    # run tests
+    - npm run test >> backend-report.txt
+    # tuer le processus npm run startdev après les tests
+    - pkill -f "npm run startdev" 
+    - cd ..
+  artifacts:
+    paths:
+      - frontend/backend-report.txt
+
+pages: # Job de mise en ligne du frontend de production sur les pages du projet
+  stage: deploy
+  image: node
+  script:
+    - mkdir public # Création du répertoire du frontend de production
+    - cd frontend  # On se place dans le répertoire des sources du frontend
+    - npm i # On installe les paquets nécessaires
+    - npm run build # Et on génère les fichiers de production
+    - cp -rf dist/* ../public/ # Qui sont copiés dans le répertoire dédié
+  artifacts: # On précise que le répertoire des pages doit être conservé une fois le job terminé
+    paths:
+      - public
+scalingo:
+  stage: deploy
+  tags:
+    - docker
+  variables:
+    # SCALINGO_API_TOKEN # variable à ne pas définir en clair ici (cf instructions à la fin du .gitlab-ci.yml ci-dessous)
+    SCALINGO_APP_NAME: imachat # le nom de votre appli chez scalingo
+    SCALINGO_REGION: osc-fr1 # l'instance de scalingo sur laquelle votre appli est déployée
+    GIT_DEPTH: 0
+    PROJECT_DIR: backend # Le répertoire dans le dépôt où est le backend
+  image: ruby:3.1.3 # car dpl est codé en Ruby
+  script:
+    # Installer scalingo CLI
+    - curl -O https://cli-dl.scalingo.com/install && bash install
+    # Pour indiquer sur le dépôt distant où est le backend 
+    # (s'il est à la racine du projet ceci est facultatif, et il est possible de le faire une fois pour toute directement dans l'interface web de scalingo)
+    - scalingo --app=$SCALINGO_APP_NAME env-set PROJECT_DIR=$PROJECT_DIR 
+    # Se connecter à scalingo avec le token d'authentification
+    - scalingo login --api-token $SCALINGO_API_TOKEN
+    # Créer une paire de clé ssh pour faire les manips git sur le dépôt scalingo
+    - mkdir -p ~/.dpl
+    - ssh-keygen -t rsa -N "" -C $HOSTNAME -f ~/.dpl/id_rsa
+    # Ajouter à scalingo la clé publique créée précédemment
+    - scalingo keys-remove dpl_tmp_key || echo On la supprime au préalable au cas où elle aurait déjà été ajoutée
+    - scalingo keys-add dpl_tmp_key ~/.dpl/id_rsa.pub
+    # Initialiser le dépôt scalingo distant (en forçant si ce n'est pas le première fois)
+    - scalingo --app $SCALINGO_APP_NAME git-setup --remote scalingo-dpl --force
+    - curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash # Installation de nvm
+    - export NVM_DIR="$HOME/.nvm"
+    - \. "$NVM_DIR/nvm.sh"  
+    - \. "$NVM_DIR/bash_completion"
+    - nvm install node # Installe la dernière version de node
+    - nvm use node
+    - cd frontend # On se place dans le répertoire des sources du frontend
+    - npm i && npm run build && cp -rf dist/* ../backend/src/frontend # Pour générer la version de production du frontend
+    - git config --global user.email "$GITLAB_USER_EMAIL" # Configure git pour pouvoir pousser la version de production du frontend sur le dépot git de scalingo
+    - git config --global user.name "$GITLAB_USER_NAME"
+    - cd ../backend/src/frontend && git add . && git commit -m "MAJ frontend" # Ajoute les fichiers de production du frontend
+    # Pousser la version du backend sur le dépôt scalingo (ce qui va provoquer son déploiement)
+    - "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -i ~/.dpl/id_rsa' git push scalingo-dpl HEAD:refs/heads/main -f"
+    # Supprimer la clé temporaire ajoutée
+    - scalingo keys-remove dpl_tmp_key || echo Suppression
+
+jobcypress:
+  stage: jobcypress
+  tags:
+    - docker
+  image: cypress/base:16.18.1
+  script: # lancer les tests cypress
+    - cd frontend/
+    - npm install
+    - npx cypress install
+    - npm run dev &
+    - npx cypress run > report-cypress.txt
+    - cat report-cypress.txt
+    - pkill -f "npm run dev" # Arrêter le serveur de développement après les tests
+  artifacts:
+    paths:
+      - frontend/report-cypress.txt
+generate_badges:
+  stage: generate_badges
+  tags:
+    - docker
+  image: python:3.9
+  script:
+    - pip install anybadge
+    - chmod +x badges.sh
+    - ./badges.sh
+  dependencies:
+    - backend_tests
+    - jobcypress
+  artifacts:
+    paths: 
+      - backend_tests.svg
+      - frontend_tests.svg
+
+
+      
+
+# https://imachat.osc-fr1.scalingo.io/frontend/ pour acceder au  web app
