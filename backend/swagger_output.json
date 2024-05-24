@@ -1,0 +1,598 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "REST API",
+    "description": ""
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "securityDefinitions": {
+    "apiKeyAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "x-access-token",
+      "description": "Token jwt de l utlisateur"
+    }
+  },
+  "paths": {
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get all users",
+        "description": "Retrieve all users from the database.",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/password": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user password",
+        "description": "Updates the password of the logged-in user.",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "password": {
+                  "example": "any"
+                }
+              }
+            },
+            "description": "New password"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user information (for admin users only)",
+        "description": "Updates the information of a user, reserved for admin users.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "John Doe"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "John.Doe@acme.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "1m02P@SsF0rt!"
+                }
+              },
+              "required": [
+                "name",
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete user (for admin users only)",
+        "description": "Deletes a user from the system. Only admin users can perform this action.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID of the user to delete"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Verify credentials of user using email and password and return token",
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "John.Doe@acme.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "12345"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user",
+        "description": "Creates a new user with provided name, email, and password.",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Name and email",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "John Doe"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "John.Doe@acme.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "1m02P@SsF0rt!"
+                }
+              },
+              "required": [
+                "name",
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mygroups": {
+      "get": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Get user groups",
+        "description": "Retrieves all groups owned by the logged-in user.",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Create a new group",
+        "description": "Creates a new group owned by the logged-in user.",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                },
+                "attributes": {
+                  "example": "any"
+                },
+                "where": {
+                  "example": "any"
+                }
+              }
+            },
+            "description": "Name of the group"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/mygroups/{gid}": {
+      "get": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Retrieve members of a group",
+        "description": "Retrieves members of a group given its ID.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mygroups/{gid}/{uid}": {
+      "put": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Add user to group",
+        "description": "Adds a user to a group given their IDs.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the user to add"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Remove user from group",
+        "description": "Removes a user from a group given their IDs.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the user to remove"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/groupsmember": {
+      "get": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Get user group memberships",
+        "description": "Retrieves the groups of which the user is a member.  const token = req.get(",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          },
+          {
+            "name": "gid",
+            "in": "path",
+            "description": "ID of the group to delete",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/groups/{gid}": {
+      "delete": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Delete a group",
+        "description": "Delete a group by its ID. Only accessible by root users.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group to delete"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/groups": {
+      "get": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Get all groups",
+        "description": "Retrieve all groups. Only accessible by admin users.",
+        "parameters": [
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/messages/{gid}": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Get messages of a group",
+        "description": "Retrieve all messages belonging to a specific group.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Create a group message",
+        "description": "Create a new message for a specific group.",
+        "parameters": [
+          {
+            "name": "gid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "x-access-token",
+            "in": "header",
+            "description": "Access token provided in the request header",
+            "type": "string"
+          },
+          {
+            "name": "Content",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Content": {
+                  "example": "any"
+                }
+              }
+            },
+            "description": "Content of the message"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    }
+  }
+}
